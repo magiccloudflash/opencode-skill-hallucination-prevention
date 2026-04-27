@@ -2,7 +2,7 @@
 
 > An OpenCode agent skill that prevents AI hallucinations by enforcing verification, uncertainty acknowledgment, and evidence-based responses.
 
-English | [中文](./README_CN.md) | [Русский](./README_RU.md)
+English | [中文](./README_CN.md) | [Русский](./README_RU.md) | [Français](./README_FR.md)
 
 ## Features
 
