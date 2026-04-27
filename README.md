@@ -2,6 +2,8 @@
 
 > An OpenCode agent skill that prevents AI hallucinations by enforcing verification, uncertainty acknowledgment, and evidence-based responses.
 
+English | [中文](./README_CN.md)
+
 ## Features
 
 - **Verify before stating** — read files, run code, check docs before making claims
