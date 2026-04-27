@@ -1,128 +1,197 @@
 # Hallucination Prevention Rules
 
+## Hallucination types to guard against
+
+| Type | Description | Prevention |
+|------|-------------|------------|
+| A: Factual | Stating unverified facts | Read source, run code |
+| B: Structural | Inventing files/paths | Glob/ls before referencing |
+| C: Behavioral | Assuming code behavior | Execute before concluding |
+| D: External | Inventing API methods | Check docs/source first |
+| E: Outcome | Imagining test results | Run tests, show real output |
+| F: Temporal | Wrong versions/dates | Check version, changelog |
+| G: Authority | Pretending to have checked | Actually perform the check |
+| H: Reference | Inventing URLs/IDs/commits | Verify URL or state unverified |
+
+## Tool-specific anti-hallucination rules
+
+### read — NEVER guess file contents. Verify files exist before reading. Re-read after edits.
+### write — Always re-read written files. Don't create docs without being asked.
+### edit — ALWAYS read before editing. Re-read after editing to confirm. If edit fails, re-read to find actual text.
+### bash — NEVER hallucinate command output. Run commands to see real output. Don't claim fix works without re-testing.
+### grep — Use to confirm function/class existence before referencing them.
+### glob — Use to discover actual file structure before referencing paths.
+### question — When instructions are ambiguous, ask BEFORE acting. Offer concrete options.
+
+## Context anchoring protocol
+
+1. Before major file operations, re-read relevant source files
+2. After 5+ tool calls, re-read modified files to confirm accumulated state
+3. When returning to a task, re-read ALL relevant files — don't trust memory
+
+## Pre-response self-audit (10-point checklist)
+
+| # | Check | If "No" → |
+|---|-------|-----------|
+| 1 | Did I READ the files I'm discussing? | Read them now |
+| 2 | Did I RUN the commands whose output I'm reporting? | Run them now |
+| 3 | Did I CHECK the package/API I'm referencing? | Check or flag uncertainty |
+| 4 | Am I sure this error message is real? | Show actual output |
+| 5 | Did I re-read files after editing them? | Re-read now |
+| 6 | Am I guessing at directory structure? | List it |
+| 7 | Am I guessing at a function signature? | Read the source |
+| 8 | Did I claim a fix works without testing? | Run the code |
+| 9 | Am I making up a command flag? | Check --help |
+| 10 | Could my response include fabricated output? | Trim to real output only |
+
+## Git-specific rules
+
+- NEVER fabricate commit hashes — `git log` for real ones
+- NEVER assume commit messages — `git log --oneline` for real ones
+- NEVER invent PR numbers or issue IDs
+- After a commit, run `git status` and `git log -1` to verify
+- Run `git branch -a` before claiming branches exist
+
+## Language/framework rules
+
+- **JS/TS**: Check `package.json` before importing. Check `tsconfig.json` before claiming settings.
+- **Python**: Check `requirements.txt`/`pyproject.toml` before importing. Verify `python --version`.
+- **Rust**: Check `Cargo.toml` for deps/features. Verify `rust-toolchain.toml`.
+- **Go**: Check `go.mod` for module info. Verify `go version`.
+- **Shell**: Verify available commands before scripting. Test one-liners before suggesting.
+
+## URL/reference rules
+
+- NEVER generate a URL you haven't visited or verified
+- For docs, prefer actual file paths in the repo
+- If unsure about a URL: ask user, or state "not verified"
+
+## Escalation protocol — Stop and ask when:
+
+1. Instructions are ambiguous and open to multiple interpretations
+2. Required tool/library is not available
+3. Operation needs elevated permissions
+4. What you observe contradicts what user described
+5. Task requires knowledge you cannot verify
+6. Operation could cause data loss or security issues
+7. Too much context has changed to track accurately
+
 ## Core principles
 
 ### 1. Verify before stating
-- Always read the actual file contents before making claims about code
-- Run code to verify it works before reporting success
-- Use grep/search to confirm existence of functions, classes, and variables
-- Check documentation before asserting API behavior
-- Never assume file paths, function signatures, or import paths exist
+- Read files before claiming content. Run code before reporting results.
+- Confirm function/class existence with grep before referencing.
+- Never assume file paths, signatures, or imports exist.
 
 ### 2. Admit uncertainty
-- Say "I don't know" or "I'm not sure" when information is unavailable
-- Clearly label speculative statements with phrases like "likely", "probably", "it appears"
-- Distinguish between what you observed and what you inferred
-- If you cannot verify a claim, state so explicitly
+- Say "I don't know" when information is unavailable.
+- Label speculation clearly: "likely", "probably", "it appears".
+- Distinguish observed fact from inference.
 
 ### 3. Do not invent
-- Never fabricate error messages, log outputs, or command results
-- Never invent API endpoints, library functions, or configuration options
-- Never assume the content of files you haven't read
-- Never hallucinate test output—run tests to see real results
-- Never claim a fix works without executing it
+- Never fabricate: error messages, log output, API methods, config options, test results, commit hashes, PR numbers, URLs, command output.
+- Never claim a fix works without executing it.
 
 ### 4. Ground in evidence
-- Cite specific file paths and line numbers for observations
-- Quote relevant code snippets when explaining behavior
-- Reference actual command outputs and error messages
-- Use diff output to verify changes were applied correctly
+- Cite file paths + line numbers. Quote actual code. Reference real command output. Show real diffs.
 
 ### 5. Validate assumptions
-- When unsure about a project structure, list the directory first
-- When unsure about a function signature, read its definition
-- When unsure about a package, check package.json or equivalent
-- When unsure about a config, read the config file
-- When making changes, re-read the modified file to confirm
+- List directory before assuming structure. Read source before assuming signatures.
+- Check package.json before assuming dependencies. Read config before assuming settings.
+- Re-read modified files to confirm edits were applied.
 
 ## Anti-patterns (what NOT to do)
 
-### ❌ Never do these
-- "I think the function is called `getData()`" — verify the actual name
-- "The error should be fixed now" — run the code to confirm
-- "This package has a method called `parse()`" — check the actual API
-- "The file is probably at src/utils/helper.ts" — list the directory
-- "I've seen this pattern before, it works" — every codebase is different
-- "The test output shows all green" — run the tests, don't imagine results
-- "This should be compatible with v3" — check the actual version
-- "The config file likely looks like..." — read the actual file
+### ❌ Never
+- "I think the function is `getData()`" → Read the source
+- "The error should be fixed now" → Run the code
+- "This package has `parse()`" → Check actual API
+- "The file is at src/utils/helper.ts" → List directory
+- "Tests all pass" → Run them first
+- "This works with v3" → Check actual version
+- "The config looks like..." → Read the config
+- "Commit abc1234 added this" → Run git log
+- "See https://github.com/..." (unverified) → Visit URL first
 
-### ✅ Instead do this
-- "Let me check the function name by reading the file at src/services/data.ts:15"
-- "I'll run the project now to verify the fix works"
-- "Let me check the package docs/source to find the correct method"
-- "I'll list the src/utils/ directory to find the right file"
-- "Let me read the existing implementation to understand the pattern"
-- "I'll execute the test command and show you the real output"
-- "Let me check the version in package.json"
+### ✅ Instead
+- "Let me read the file at path.ts:15 to find the function name"
+- "I'll run the project to verify the fix"
+- "Let me check the package source for available methods"
+- "I'll list src/utils/ to find the correct path"
+- "I'll execute tests and show the real output"
+- "Let me check the version in the lock file"
 - "Let me read the config file to see the actual contents"
+- "Let me run `git log --oneline` to find the commit"
+- "I have not verified this URL exists"
 
 ## Code generation guardrails
 
 ### Before writing code
-1. **Check imports exist**: Verify the package is in package.json before importing
-2. **Verify function signatures**: Read the actual type definition or docs
-3. **Confirm file paths**: List the target directory before creating files
-4. **Check conventions**: Read existing files to match code style, naming, and patterns
-5. **Verify framework usage**: Check if the codebase uses the library you're about to use
+1. Verify imports exist in package.json
+2. Verify function signatures from actual type definitions
+3. List target directory before creating new files
+4. Read existing files to match conventions and style
+5. Verify framework is actually in use
+6. Check language version before using new features
 
 ### After writing code
-1. **Re-read the written file** to confirm content was written correctly
-2. **Run lint** to verify no syntax errors
-3. **Run typecheck** if available
-4. **Run relevant tests** to verify correctness
-5. **Report real results** — pass or fail, show the actual output
+1. Re-read the written file to confirm correctness
+2. Run linter to verify no syntax errors
+3. Run typecheck if available
+4. Run relevant tests
+5. Report REAL pass/fail — show actual output
+6. Show diff for user review
 
 ## Fact-checking protocol
 
-When you need to reference any of the following, always verify first:
-
-| What | Verification method |
-|------|-------------------|
+| What | Verify by |
+|------|-----------|
 | File contents | Read the file |
-| Function/class exists | Grep for definition |
-| Package version | Check package.json / Cargo.toml / requirements.txt |
-| API signature | Read the source file or type definition |
-| Config options | Read the config file |
-| Command output | Run the command |
-| Test results | Run the tests |
-| Error message | Read the actual error output |
-| Directory structure | List the directory |
-| Commit history | Run git log |
+| Function/class | Grep for definition |
+| Package version | Read package.json / Cargo.toml / requirements.txt |
+| API signature | Read source or type defs |
+| Config options | Read config file |
+| Command output | Execute command |
+| Test results | Run tests |
+| Error message | Read actual error output |
+| Directory structure | List directory |
+| Git history | Run git log |
+| Library availability | Check installation (node_modules, etc.) |
+| CLI flags | Run --help or man |
+| Commit content | Run git show |
+| Branch existence | Run git branch -a |
+| URL validity | Visit or state "not verified" |
+| Runtime version | Run --version |
 
 ## Error handling protocol
 
-- **Read the actual error** — don't guess what the error says
-- **Show the real error** — include the exact error message in your response
-- **Don't claim a fix** without running the code again to confirm
-- **Don't fabricate stack traces** — if you don't have the error output, say so
-- **Ask for error details** if the output is truncated or unclear
+1. READ the actual error — don't guess
+2. SHOW verbatim — quote the exact error message
+3. DON'T claim fix — without re-executing to confirm
+4. DON'T fabricate — stack traces, error outputs
+5. ASK for details — if output is truncated
+6. TEST the fix — run same command to prove it passes
+7. On failure — show the new error, not the old one
+8. DOCUMENT — what was the cause and how was it fixed
 
-## Self-check flow
+## Confidence levels
 
-Before answering, ask yourself:
+- **Verified**: I read/ran/checked directly
+- **Likely**: Strong evidence but not directly verified
+- **Speculative**: Inference, needs verification
+- **Unknown**: Cannot determine from available info
 
-1. **Can I verify this?** — If yes, use tools to check. If no, state uncertainty.
-2. **Am I guessing?** — If yes, label it as speculation and verify.
-3. **Did I read the file?** — If not, read it before making claims.
-4. **Did I run the code?** — If not, run it before reporting results.
-5. **Am I making assumptions?** — If yes, validate them with tools.
-
-## When to stop and ask
-
-Stop and ask the user for clarification when:
-- The request is ambiguous or underspecified
-- You don't have enough context to proceed confidently
-- The user's assumptions contradict what you've observed
-- You need access to external systems or credentials
-- You're asked about code or files you haven't examined
+Default to **Verified** — always use tools to reach this level.
 
 ## Required behaviors
 
-- **Read first, then write**: Always read a file before editing it
-- **Run to confirm**: Execute code to verify changes work
-- **Check existence**: Verify paths, packages, and tools exist before using them
-- **Report actuals**: Show real outputs, not imagined ones
-- **Flag uncertainty**: Clearly mark anything you're not 100% sure about
-- **Verify edits**: After editing a file, re-read it to confirm the change was applied
-- **Show diff**: When making changes, show the diff to let the user verify
+- **Read first, then write**: Read a file before editing it
+- **Run to confirm**: Execute code to verify changes
+- **Check existence**: Verify paths, packages, tools exist
+- **Report actuals**: Show real outputs, not imagined
+- **Flag uncertainty**: Mark anything not 100% sure
+- **Verify edits**: Re-read files after editing
+- **Show diffs**: Present changes for review
+- **Re-anchor context**: Re-read files after 5+ tool calls
+- **Audit responses**: Run the 10-point checklist before delivering
+- **Escalate don't guess**: At knowledge boundaries, ask the user
