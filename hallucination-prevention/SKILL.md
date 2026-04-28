@@ -6,8 +6,101 @@ compatibility: opencode
 metadata:
   audience: agent
   category: accuracy
-  version: 2.0.0
+  version: 2.1.0
 ---
+
+## Security framework
+
+### Secrets and credentials
+- **NEVER** write secrets, API keys, tokens, passwords, or private keys to any file
+- **NEVER** log secrets or expose them in command output or error messages
+- **NEVER** commit `.env`, `.env.local`, credentials.json, or any file containing secrets
+- Use environment variables (e.g., `process.env.SECRET`) — not hardcoded values
+- If you encounter a secret in code, warn the user and suggest `.env` or a vault
+- For `.env` files: never read or display their contents
+
+### Input validation and injection prevention
+- **Always** validate and sanitize user inputs before using them
+- **SQL**: Use parameterized queries — never concatenate user input into SQL strings
+- **Shell**: Quote variables, use `--` to separate options from arguments, avoid `eval`
+- **HTML/JSX**: Encode output to prevent XSS — use framework escaping (React's default, `DOMPurify`, etc.)
+- **URL/Path**: Validate and sanitize paths to prevent path traversal (`../../etc/passwd`)
+- **Command injection**: Never pass unsanitized user input to `exec`, `spawn`, or `system()` calls
+
+### Command execution safety
+- **Before running ANY bash command**: Review for destructive operations:
+  - `rm -rf`, `git push --force`, `DROP TABLE`, `DELETE FROM`, `format`, `mkfs`
+  - Commands with `sudo` or requiring elevated privileges
+  - Commands that modify system configuration
+- **Always ask for confirmation** before running destructive or high-impact commands
+- **Never run commands blindly** from untrusted sources or user-provided scripts without review
+- Prefer dry-run options (`--dry-run`, `-n`) when available before destructive operations
+
+### Dependency security
+- **Check for known vulnerabilities** before adding new dependencies:
+  - `npm audit`, `pip-audit`, `cargo audit`, `bundle-audit`
+  - Verify package is actively maintained (last commit date, issue activity)
+- **Pin versions** — avoid floating version ranges like `^` or `*`
+- **Verify package source** — prefer official registries, check for typosquatting
+- **Review dependency licenses** — ensure compatibility with your project's license
+- **Minimize dependencies** — prefer standard library solutions over adding a new package
+
+### File access security
+- **Never read**:
+  - `.env`, `.env.local`, `.env.production`
+  - Private keys (`*.pem`, `*.key`, `id_rsa`)
+  - Credential files (`credentials.json`, `service-account.json`)
+  - Configuration files with secrets (`~/.aws/credentials`, `~/.config/hub`)
+  - Certificate files (`.crt`, `.cert`) — only read public certs
+- **Never write** to system directories without explicit user request
+- **Check file permissions** and warn about overly permissive files (e.g., `chmod 777`)
+
+### Authentication and authorization
+- **Always verify** authorization status before performing sensitive operations
+- **Never bypass** auth checks with comments like `// TODO: add auth later`
+- Use **principle of least privilege** — request minimum scopes/permissions needed
+- **Hash passwords** with bcrypt, argon2, or PBKDF2 — never MD5, SHA1, or plain text
+- **JWT tokens**: Set appropriate expiration, verify signature on every request, store securely
+- **Never store** authentication tokens in client-side localStorage for sensitive applications
+
+### Data privacy
+- **Never expose PII** (Personally Identifiable Information) in logs, commits, or responses
+- **Mask sensitive data** in logs and error messages (e.g., `email: "j***@example.com"`)
+- **Never transmit** unencrypted sensitive data over HTTP — use HTTPS
+- **Delete sensitive data** when no longer needed (principle of data minimization)
+- **Respect cookie security flags**: `HttpOnly`, `Secure`, `SameSite=Strict`/`Lax`
+
+### Network security
+- **Always use HTTPS** when fetching external resources
+- **Validate SSL/TLS certificates** — don't disable verification (`NODE_TLS_REJECT_UNAUTHORIZED=0`)
+- **Set request timeouts** — never leave connections hanging indefinitely
+- **Handle network errors gracefully** — never expose stack traces or internal IPs
+- **Use CORS properly** — don't use `Access-Control-Allow-Origin: *` with credentials
+- **Validate redirects** — don't follow redirects to unknown hosts
+
+### Secure coding patterns
+- **Race conditions**: Use transactions, locks, or atomic operations for shared state
+- **Error handling**: Never expose stack traces or internal details in production errors
+- **Logging**: Log security-relevant events (auth failures, access denials) but never secrets
+- **Cryptography**: Use standard algorithms (AES-256-GCM, SHA-256) — never roll your own
+- **CSRF protection**: Use anti-CSRF tokens for state-changing requests
+- **Rate limiting**: Implement rate limiting on auth endpoints and sensitive APIs
+
+### Security code review checklist
+
+When writing or reviewing code, verify:
+
+| Check | Action |
+|-------|--------|
+| Are any secrets hardcoded? | Move to `.env` or secrets manager |
+| Is user input properly validated? | Add validation and sanitization |
+| Are SQL queries parameterized? | Replace string concatenation with placeholders |
+| Is output properly encoded? | Use framework escaping or sanitization |
+| Are file paths validated? | Check for path traversal patterns |
+| Are dependencies audited? | Run `npm audit` or equivalent |
+| Is HTTPS used for all external requests? | Update URLs to `https://` |
+| Are errors revealing too much? | Use generic error messages in production |
+| Are permissions properly checked? | Verify auth middleware on all protected routes |
 
 ## Hallucination type taxonomy
 

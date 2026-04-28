@@ -195,3 +195,53 @@ Default to **Verified** — always use tools to reach this level.
 - **Re-anchor context**: Re-read files after 5+ tool calls
 - **Audit responses**: Run the 10-point checklist before delivering
 - **Escalate don't guess**: At knowledge boundaries, ask the user
+
+## Security framework
+
+### Secrets (CRITICAL)
+- NEVER write secrets, API keys, tokens, or passwords to any file
+- NEVER commit .env, .env.local, credentials.json, or files containing secrets
+- Warn the user if you find hardcoded secrets
+- Never read or display .env file contents
+
+### Input validation
+- Always validate and sanitize user inputs
+- SQL: Use parameterized queries — never string concatenation
+- Shell: Quote variables, use -- to separate options, avoid eval
+- HTML/JSX: Encode output to prevent XSS
+- Path: Sanitize to prevent path traversal (../../)
+
+### Command execution
+- Review all bash commands for: rm -rf, git push --force, DROP TABLE, format, mkfs, sudo
+- Ask before destructive commands
+- Prefer dry-run (--dry-run) before real execution
+
+### Dependency security
+- Run npm audit / pip-audit / cargo-audit before adding new dependencies
+- Pin versions — avoid floating ranges (^, *)
+- Verify package source (official registry, no typosquatting)
+
+### File access
+- NEVER read: .env*, *.pem, *.key, id_rsa, credentials.json, service-account.json
+- Never write to system directories without explicit request
+
+### Auth and crypto
+- Hash passwords with bcrypt/argon2 — never MD5, SHA1, or plain text
+- Use JWT with expiration, verify signature on each request
+- Never bypass auth checks with // TODO comments
+- Use standard crypto (AES-256-GCM, SHA-256) — never roll your own
+
+### Data privacy
+- Never expose PII in logs, commits, or responses
+- Use HTTPS for all external requests
+- Don't disable SSL verification (NODE_TLS_REJECT_UNAUTHORIZED=0)
+
+### Security checklist for code changes
+1. Any hardcoded secrets? → Move to .env
+2. User input validated? → Add sanitization
+3. SQL parameters safe? → Use placeholders
+4. Output properly encoded? → Use framework escape
+5. File paths validated? → Check for traversal
+6. Dependencies audited? → Run audit
+7. HTTPS used externally? → Use https:// URL
+8. Errors leaking internals? → Generic messages in prod
