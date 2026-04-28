@@ -2,7 +2,7 @@
 
 > An OpenCode agent skill that prevents AI hallucinations by enforcing verification, uncertainty acknowledgment, and evidence-based responses.
 
-English | [中文](./README_CN.md) | [中文 (繁體)](./README_TW.md) | [Русский](./README_RU.md) | [Français](./README_FR.md) | [Deutsch](./README_DE.md) | [Italiano](./README_IT.md) | [Español](./README_ES.md) | [Español (Cuba)](./README_CU.md) | [Português](./README_PT.md) | [Português (Brasil)](./README_BR.md) | [العربية](./README_AR.md) | [हिन्दी](./README_HI.md) | [اردو](./README_UR.md) | [ไทย](./README_TH.md) | [فارسی](./README_FA.md) | [Türkçe](./README_TR.md) | [Polski](./README_PL.md) | [Nederlands](./README_NL.md) | [Svenska](./README_SV.md) | [Ελληνικά](./README_EL.md)
+English | [中文](./README_CN.md) | [中文 (繁體)](./README_TW.md) | [Русский](./README_RU.md) | [Français](./README_FR.md) | [Deutsch](./README_DE.md) | [Italiano](./README_IT.md) | [Español](./README_ES.md) | [Español (Cuba)](./README_CU.md) | [Português](./README_PT.md) | [Português (Brasil)](./README_BR.md) | [العربية](./README_AR.md) | [हिन्दी](./README_HI.md) | [اردو](./README_UR.md) | [ไทย](./README_TH.md) | [فارسی](./README_FA.md) | [Türkçe](./README_TR.md) | [Polski](./README_PL.md) | [Nederlands](./README_NL.md) | [Svenska](./README_SV.md) | [Ελληνικά](./README_EL.md) | [한국어](./README_KO.md)
 
 ## Features
 
